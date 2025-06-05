@@ -4,68 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Neural Network</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { display: flex; flex-direction: column; gap: 30px; }
+        .section { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 15px; cursor: pointer; }
+        #file-input { display: none; }
+        .custom-button {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #eee;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .custom-button:hover { background: #ddd; }
+        #generated-image { max-width: 100%; margin-top: 15px; }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Custom Image Dataset Generator</h1>
 
-        <div class="upload-section">
+        {% if request.args.get('error') %}
+            <div class="error">{{ request.args.get('error') }}</div>
+        {% endif %}
+        {% if request.args.get('success') %}
+            <div class="success">{{ request.args.get('success') }}</div>
+        {% endif %}
+
+        <div class="section">
             <h2>1. Upload Images to Create Dataset</h2>
-            <form action="/upload" method="post" enctype="multipart/form-data">
+            <form id="upload-form" enctype="multipart/form-data">
                 <input type="file" name="files" id="file-input" multiple accept="image/*">
                 <label for="file-input" class="custom-button">Choose Images</label>
+                <span id="file-count">0 files selected</span>
                 <button type="submit" class="submit-button">Create Dataset</button>
             </form>
         </div>
 
-        <div class="generate-section">
+        <div class="section">
             <h2>2. Generate New Image</h2>
-            <form action="/generate" method="post">
-                <input type="hidden" name="dataset_id" value="{{ request.args.get('dataset_id', '') }}">
-                <button type="submit" class="generate-button">Generate Image</button>
+            <form id="generate-form">
+                <input type="hidden" name="dataset_id" id="dataset-id" value="{{ dataset_id or '' }}">
+                <button type="submit" class="generate-button" {% if not dataset_id %}disabled{% endif %}>
+                    Generate Image
+                </button>
             </form>
-
-            {% if request.args.get('generated_id') %}
-                <div class="result">
-                    <h3>Generated Image</h3>
-                    <img src="{{ url_for('generated_image', filename='generated_' + request.args.get('generated_id') + '.png') }}"
-                         alt="Generated Image">
-                </div>
-            {% endif %}
+            <div id="generation-result"></div>
         </div>
 
-
-
-        <!-- Добавьте новую форму после кнопки генерации -->
-<div class="train-section">
-    <h2>3. Train Model</h2>
-    <form action="/train" method="post">
-        <input type="hidden" name="dataset_id" value="{{ request.args.get('dataset_id', '') }}">
-        <button type="submit" class="train-button">Train Model on This Dataset</button>
-    </form>
-
-    {% if request.args.get('message') %}
-        <div class="message">
-            {{ request.args.get('message') }}
+        <div class="section">
+            <h2>3. Train Model</h2>
+            <form id="train-form">
+                <input type="hidden" name="dataset_id" value="{{ dataset_id or '' }}">
+                <button type="submit" class="train-button" {% if not dataset_id %}disabled{% endif %}>
+                    Train Model
+                </button>
+            </form>
+            <div id="training-result"></div>
         </div>
-    {% endif %}
-
-
-    {% if request.args.get('generated_id') %}
-    <div class="result">
-        <h3>Generated Image</h3>
-        <p>File path: {{ url_for('generated_image', filename='generated_' + request.args.get('generated_id') + '.png') }}</p>
-        <img src="{{ url_for('generated_image', filename='generated_' + request.args.get('generated_id') + '.png') }}"
-             alt="Generated Image">
     </div>
-{% endif %}
 
+    <script>
+        // Обновляем счетчик файлов
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            document.getElementById('file-count').textContent =
+                `${e.target.files.length} file${e.target.files.length !== 1 ? 's' : ''} selected`;
+        });
 
-</div>
+        // AJAX обработка форм
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
 
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
 
+                if (response.redirected) {
+                    window.location.href = response.url;
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+            }
+        });
 
-    </div>
+        document.getElementById('generate-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const resultDiv = document.getElementById('generation-result');
+            resultDiv.innerHTML = '<p>Generating...</p>';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="success">Image generated successfully!</p>
+                        <img id="generated-image" src="${data.image_url}" alt="Generated Image">
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Generation failed: ${error.message}</p>`;
+            }
+        });
+
+        document.getElementById('train-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const resultDiv = document.getElementById('training-result');
+            resultDiv.innerHTML = '<p>Training...</p>';
+
+            try {
+                const response = await fetch('/train', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p class="success">${data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Training failed: ${error.message}</p>`;
+            }
+        });
+    </script>
 </body>
 </html>
