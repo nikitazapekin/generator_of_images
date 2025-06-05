@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Neural Network</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Custom Image Dataset Generator</h1>
+
+        <div class="upload-section">
+            <h2>1. Upload Images to Create Dataset</h2>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="files" id="file-input" multiple accept="image/*">
+                <label for="file-input" class="custom-button">Choose Images</label>
+                <button type="submit" class="submit-button">Create Dataset</button>
+            </form>
+        </div>
+
+        <div class="generate-section">
+            <h2>2. Generate New Image</h2>
+            <form action="/generate" method="post">
+                <input type="hidden" name="dataset_id" value="{{ request.args.get('dataset_id', '') }}">
+                <button type="submit" class="generate-button">Generate Image</button>
+            </form>
+
+            {% if request.args.get('generated_id') %}
+                <div class="result">
+                    <h3>Generated Image</h3>
+                    <img src="{{ url_for('generated_image', filename='generated_' + request.args.get('generated_id') + '.png') }}"
+                         alt="Generated Image">
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
