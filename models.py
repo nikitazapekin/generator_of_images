@@ -2,6 +2,12 @@
 import torch
 import torch.nn as nn
 
+def init_weights(m):
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+        nn.init.xavier_normal_(m.weight)
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)
+
 
 class Autoencoder(nn.Module):
     def __init__(self):
@@ -31,8 +37,10 @@ class Autoencoder(nn.Module):
         x = self.decoder(x)
         return x
 
-
+'''
+ 
 if __name__ == '__main__':
     model = Autoencoder()
     torch.save(model.state_dict(), 'autoencoder.pth')
     print("Model successfully saved to autoencoder.pth")
+'''

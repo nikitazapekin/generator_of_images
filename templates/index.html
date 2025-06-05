@@ -34,6 +34,38 @@
                 </div>
             {% endif %}
         </div>
+
+
+
+        <!-- Добавьте новую форму после кнопки генерации -->
+<div class="train-section">
+    <h2>3. Train Model</h2>
+    <form action="/train" method="post">
+        <input type="hidden" name="dataset_id" value="{{ request.args.get('dataset_id', '') }}">
+        <button type="submit" class="train-button">Train Model on This Dataset</button>
+    </form>
+
+    {% if request.args.get('message') %}
+        <div class="message">
+            {{ request.args.get('message') }}
+        </div>
+    {% endif %}
+
+
+    {% if request.args.get('generated_id') %}
+    <div class="result">
+        <h3>Generated Image</h3>
+        <p>File path: {{ url_for('generated_image', filename='generated_' + request.args.get('generated_id') + '.png') }}</p>
+        <img src="{{ url_for('generated_image', filename='generated_' + request.args.get('generated_id') + '.png') }}"
+             alt="Generated Image">
+    </div>
+{% endif %}
+
+
+</div>
+
+
+
     </div>
 </body>
 </html>

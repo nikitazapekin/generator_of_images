@@ -62,3 +62,35 @@ h2 {
     border-radius: 4px;
     padding: 5px;
 }
+
+
+.train-section {
+    background-color: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.train-button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.train-button:hover {
+    background-color: #219653;
+}
+
+.message {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    color: #27ae60;
+}
